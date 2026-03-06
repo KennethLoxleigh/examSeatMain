@@ -1,72 +1,219 @@
 import { useEffect, useState } from "react";
 import "./Student.css";
-import { getStudents, addStudent } from "./api.js";
-import AddStudentModal from "./AddStudentModal";
+import AddStudentModal from "./AddStudentModal.jsx";
+
+// ✅ IMPORTANT: pick ONE import based on your folder:
+// If Student.jsx is at src/PageComponents/Student.jsx use this:
+import { fetchStudents, addStudent, updateStudent, deleteStudent } from "../api/studentApi.js";
+
+// If Student.jsx is at src/AdminPages/PageComponents/Student.jsx use this instead:
+// import { fetchStudents, addStudent, updateStudent, deleteStudent } from "../../api/studentApi.js";
 
 export default function Student() {
   const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
-  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
-  const load = async () => {
-    setErr("");
+  // add modal
+  const [showAdd, setShowAdd] = useState(false);
+
+  // edit dropdown per-row
+  const [editingRollNo, setEditingRollNo] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editMajorId, setEditMajorId] = useState("");
+  const [editError, setEditError] = useState("");
+
+  async function loadStudents() {
     setLoading(true);
+    setStatus("");
     try {
-      const list = await getStudents();
-      setStudents(list);
-    } catch (e) {
-      setErr(e.message);
+      const data = await fetchStudents();
+      setStudents(data);
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    load();
+    loadStudents();
   }, []);
 
-  const handleSave = async (student) => {
-    await addStudent(student);
-    await load(); // refresh table after insert
-  };
+  // AddStudentModal returns: { roll_no, name, major_id } :contentReference[oaicite:3]{index=3}
+  async function handleAddFromModal(payload) {
+    const msg = await addStudent({
+      rollNo: payload.roll_no.trim(),
+      name: payload.name.trim(),
+      majorId: Number(payload.major_id),
+    });
+
+    setStatus(msg);
+    await loadStudents();
+  }
+
+  function startEdit(student) {
+    setEditError("");
+    setStatus("");
+    setEditingRollNo(student.rollNo);
+    setEditName(student.name ?? "");
+    setEditMajorId(String(student.majorId ?? ""));
+  }
+
+  function cancelEdit() {
+    setEditingRollNo(null);
+    setEditName("");
+    setEditMajorId("");
+    setEditError("");
+  }
+
+  async function saveEdit(rollNo) {
+    setEditError("");
+    setStatus("");
+
+    if (!editName.trim()) return setEditError("Name is required.");
+    if (editMajorId.trim() === "" || Number.isNaN(Number(editMajorId)))
+      return setEditError("Major ID must be a number.");
+
+    try {
+      const msg = await updateStudent({
+        rollNo,
+        name: editName.trim(),
+        majorId: Number(editMajorId),
+      });
+      setStatus(msg);
+      cancelEdit();
+      await loadStudents();
+    } catch (err) {
+      setEditError(err.message);
+    }
+  }
+
+  async function removeStudent(rollNo) {
+    setStatus("");
+    try {
+      const msg = await deleteStudent(rollNo);
+      setStatus(msg);
+
+      if (editingRollNo === rollNo) cancelEdit();
+
+      await loadStudents();
+    } catch (err) {
+      setStatus(`Error: ${err.message}`);
+    }
+  }
 
   return (
     <>
       <div className="stuWrapper">
         <div className="stuHeadLeft">Students</div>
-
         <div className="stuHeadRight">
-          <button className="stuAddBtn" onClick={() => setOpen(true)}>
+          <button className="stuAddBtn" onClick={() => setShowAdd(true)}>
             Add Student
           </button>
         </div>
       </div>
 
-      {loading && <p>Loading...</p>}
-      {err && <p style={{ color: "salmon" }}>{err}</p>}
+      {status && <p style={{ color: "white", paddingLeft: 20 }}>{status}</p>}
 
-      <table className="stuList">
-        <thead className="stuHeader">
-          <tr>
-            <th>Roll Number</th>
-            <th>Name</th>
-            <th>Major ID</th>
-          </tr>
-        </thead>
+      <div className="stuList">
+        <ul className="stuHeader">
+          <li>Roll No</li>
+          <li>Name</li>
+          <li>Major ID</li>
+          <li>Action</li>
+        </ul>
 
-        <tbody>
-          {students.map((s) => (
-            <tr key={s.roll_no}>
-              <td>{s.roll_no}</td>
-              <td>{s.name}</td>
-              <td>{s.major_id}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {loading ? (
+          <p style={{ color: "white", paddingLeft: 20 }}>Loading...</p>
+        ) : (
+          <div style={{ paddingLeft: 80, paddingRight: 80, marginTop: 10 }}>
+            <table
+              border="1"
+              cellPadding="10"
+              style={{ width: "100%", color: "white", borderCollapse: "collapse" }}
+            >
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Name</th>
+                  <th>Major ID</th>
+                  <th style={{ width: 240 }}>Action</th>
+                </tr>
+              </thead>
 
-      {open && <AddStudentModal onClose={() => setOpen(false)} onSave={handleSave} />}
+              <tbody>
+                {students.map((s) => (
+                  <>
+                    <tr key={s.rollNo}>
+                      <td>{s.rollNo}</td>
+                      <td>{s.name}</td>
+                      <td>{s.majorId}</td>
+                      <td>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={() => startEdit(s)}>Update</button>
+                          <button onClick={() => removeStudent(s.rollNo)}>Remove</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {editingRollNo === s.rollNo && (
+                      <tr key={`${s.rollNo}-edit`}>
+                        <td colSpan={4}>
+                          <div
+                            style={{
+                              marginTop: 8,
+                              padding: 12,
+                              border: "1px solid white",
+                              borderRadius: 8,
+                            }}
+                          >
+                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                              <div>
+                                <div style={{ fontSize: 12, marginBottom: 4 }}>Roll No</div>
+                                <input value={s.rollNo} disabled />
+                              </div>
+
+                              <div>
+                                <div style={{ fontSize: 12, marginBottom: 4 }}>Name</div>
+                                <input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                              </div>
+
+                              <div>
+                                <div style={{ fontSize: 12, marginBottom: 4 }}>Major ID</div>
+                                <input
+                                  value={editMajorId}
+                                  onChange={(e) => setEditMajorId(e.target.value)}
+                                />
+                              </div>
+
+                              <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
+                                <button onClick={() => saveEdit(s.rollNo)}>Save</button>
+                                <button onClick={cancelEdit}>Cancel</button>
+                              </div>
+                            </div>
+
+                            {editError && (
+                              <p style={{ marginTop: 8, color: "#ff6b6b" }}>{editError}</p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showAdd && (
+        <AddStudentModal
+          onClose={() => setShowAdd(false)}
+          onSave={handleAddFromModal}
+        />
+      )}
     </>
   );
 }

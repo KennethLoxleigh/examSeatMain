@@ -1,16 +1,6 @@
 import { useState } from "react";
 import styles from "./LoginModal.module.css";
 
-import { login } from "./api.js";
-
-// inside handleSubmit
-try {
-  const data = await login(role, username, password);
-  // success -> do your navigation/state update here
-} catch (err) {
-  setMsg(err.message);
-}
-
 export default function LoginModal({ role, onClose, onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +11,6 @@ export default function LoginModal({ role, onClose, onLogin }) {
     const result = onLogin({ role, username, password });
 
     if (result.ok) {
-      // App will switch page automatically (auth state changes)
       setMsg("");
       onClose();
     } else {
@@ -30,7 +19,11 @@ export default function LoginModal({ role, onClose, onLogin }) {
   };
 
   const title =
-    role === "admin" ? "Admin Login" : role === "student" ? "Student Login" : "Invigilator Login";
+    role === "admin"
+      ? "Admin Login"
+      : role === "student"
+      ? "Student Login"
+      : "Invigilator Login";
 
   return (
     <div className={styles.overlay} onClick={onClose}>
