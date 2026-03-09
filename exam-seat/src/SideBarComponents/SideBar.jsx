@@ -22,14 +22,6 @@ export default function SideBar({ activePage, setActivePage, children, onLogout,
           <h3 className="logo">Exam Seating Arrangement System</h3>
         </div>
 
-        <div className="navCenter">
-          <a href="#">Home</a>
-          <a href="#">About Us</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>
-            Log Out
-          </a>
-        </div>
-
         <div className="navRight">
           <span className="who">{username}</span>
           <img className="profilePic" src="https://i.pravatar.cc/40" alt="profile" />

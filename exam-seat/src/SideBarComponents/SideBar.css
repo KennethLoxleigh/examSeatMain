@@ -20,11 +20,6 @@ body {
 
 .logo { margin: 0; }
 
-.navCenter {
-  display: flex;
-  gap: 55px;
-}
-
 .navCenter a {
   text-decoration: none;
   color: white;

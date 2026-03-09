@@ -1,0 +1,37 @@
+.body {
+    background: #e9ecef;
+}
+
+.dashboardWrapper {
+    color: black;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    padding-left: 180px;
+    gap: 50px;
+}
+
+.goToBox {
+    color: #03045E;
+    background-color: white;
+    font-size: 35px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bolder;
+    width: 370px;
+    height: 150px;
+    border: 5px solid #03045E;
+    border-radius: 15px;
+    box-shadow: 5px 5px 5px rgb(25, 25, 25);
+    padding-top: 60px;
+    padding-left: 20px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.goToBox:hover {
+    transform: scale(1.08);
+
+}
+
+.goToBox a {
+    font-size: 20px;
+    text-decoration: none;
+}

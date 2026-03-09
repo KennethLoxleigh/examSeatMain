@@ -13,7 +13,7 @@ export default function AdminLayout({ username, onLogout }) {
   const renderPage = () => {
     switch (activePage) {
       case "dashboard":
-        return <Dashboard username={username} />;
+        return <Dashboard username={username} onNavigate={setActivePage} />;
       case "student":
         return <Student />;
       case "invigilator":
@@ -23,7 +23,7 @@ export default function AdminLayout({ username, onLogout }) {
       case "room":
         return <Room />;
       default:
-        return <Dashboard username={username} />;
+        return <Dashboard username={username} onNavigate={setActivePage} />;
     }
   };
 
