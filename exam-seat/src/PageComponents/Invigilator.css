@@ -41,11 +41,14 @@
 
 /*Header Of The Table Invigilator*/
 
-.inviListHead {
+.inviList {
     margin-top: 30px;
     margin-right: 280px;
-    height: 40px;
-    background-color: blue;
+    
+}
+
+.inviList {
+    color: black;
 }
 
 .inviHeader {
@@ -57,6 +60,3 @@
     padding-right: 80px;
 }
 
-.inviHeader li {
-    display: inline-block;
-}

@@ -6,6 +6,7 @@ import Student from "../PageComponents/Student.jsx";
 import Invigilator from "../PageComponents/Invigilator.jsx";
 import Exam from "../PageComponents/Exam.jsx";
 import Room from "../PageComponents/Room.jsx";
+import Seating from "../Seat/seating.jsx";
 
 export default function AdminLayout({ username, onLogout }) {
   const [activePage, setActivePage] = useState("dashboard");
@@ -26,6 +27,9 @@ export default function AdminLayout({ username, onLogout }) {
         return <Dashboard username={username} onNavigate={setActivePage} />;
     }
   };
+  if (activePage === "seating") {
+    return <Seating onBack={() => setActivePage("dashboard")} />;
+  }
 
   return (
     <SideBar

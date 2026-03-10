@@ -42,13 +42,14 @@
 
 /*Header Of The Table Student*/
 
-.roomListHead {
+.roomList{
     margin-top: 30px;
     margin-right: 280px;
-    height: 40px;
-    background-color: blue;
 }
 
+.roomList tbody {
+    color: black;
+}
 .roomHeader {
     display: flex;
     list-style: none;
@@ -58,7 +59,4 @@
     padding-right: 50px;
 }
 
-.roomHeader li {
-    display: inline-block;
-}
 

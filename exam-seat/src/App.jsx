@@ -7,6 +7,8 @@ import AdminLayout from "./AdminPages/Admin.jsx";
 import StudentHome from "./StudentPages/StudentHome.jsx";
 import InvigilatorHome from "./InvigilatorPages/InvigilatorHome.jsx";
 
+import Seating from "./Seat/seating.jsx";
+
 // ✅ Demo accounts (change these later)
 const USERS = {
   admin: { username: "admin", password: "admin123" },

@@ -48,6 +48,24 @@ export default function Dashboard({ username, onNavigate }) {
             </a>
         </div>
     </div>
+
+    <div className="newWrapper">
+        <div className="assignedSeat">
+            <a
+            href="#"
+            onClick={(e) => {
+                e.preventDefault();
+                onNavigate("seating");
+            }}
+            >
+                Seating Plan
+            </a>
+        </div>
+
+        <div className="assignedInvi">
+            <a href="#">Assigned Inivigilator</a>
+        </div>
+    </div>
     </>
   );
 }

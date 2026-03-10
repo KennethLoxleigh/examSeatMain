@@ -47,6 +47,10 @@
     margin-right: 280px;
 }
 
+.stuList tbody {
+    color: black;
+}
+
 .stuHeader {
     display: flex;
     list-style: none;
