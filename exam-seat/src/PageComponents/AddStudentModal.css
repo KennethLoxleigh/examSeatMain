@@ -11,7 +11,7 @@
 
 .stuModal{
   width: 420px;
-  background: #0f172a;
+  background: #03045E;
   color: white;
   border-radius: 14px;
   padding: 16px;
@@ -40,7 +40,7 @@
 }
 
 .stuModalForm input{
-  width: 100%;
+  width: 400px;
   padding: 10px;
   margin-top: 6px;
   border-radius: 8px;
@@ -61,4 +61,9 @@
   border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
+}
+
+.examDateInput::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }

@@ -1,40 +1,71 @@
+const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/seating`;
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/student`;
+async function handleResponse(res) {
+  if (res.ok) return res;
 
-async function handleJsonResponse(response) {
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Request failed");
+  let message = `HTTP ${res.status} ${res.statusText}`;
+
+  try {
+    const data = await res.json();
+
+    const trace = data.trace || "";
+    const backendMessage = data.message || "";
+    const backendError = data.error || "";
+
+    if (
+      trace.includes("No seating plan found for this room") ||
+      backendMessage.includes("No seating plan found for this room")
+    ) {
+      message =
+        "No saved seating plan for this room. Please click Generate Plan first.";
+    } else {
+      message = backendMessage || backendError || message;
+    }
+  } catch {
+    const text = await res.text().catch(() => "");
+
+    if (text.includes("No seating plan found for this room")) {
+      message =
+        "No saved seating plan for this room. Please click Generate Plan first.";
+    } else if (text) {
+      message = text;
+    }
   }
-  return response.json();
-}
 
-async function handleTextResponse(response) {
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(text || "Request failed");
-  }
-  return text;
+  throw new Error(message);
 }
 
 export async function fetchSeatingRooms() {
-  const response = await fetch(`${BASE_URL}/list-seating-rooms`);
-  return handleJsonResponse(response);
+  const res = await fetch(`${BASE_URL}/list-seating-rooms`);
+  await handleResponse(res);
+  return res.json();
 }
 
 export async function fetchSavedSeatingPlan(roomId) {
-  const response = await fetch(`${BASE_URL}/view-plan/${roomId}`);
-  return handleJsonResponse(response);
+  const res = await fetch(`${BASE_URL}/view-plan/${roomId}`);
+  await handleResponse(res);
+  return res.json();
 }
 
 export async function generateSeatingPlan(roomId) {
-  const response = await fetch(`${BASE_URL}/generate-plan/${roomId}`);
-  return handleJsonResponse(response);
+  const res = await fetch(`${BASE_URL}/generate-plan/${roomId}`);
+  await handleResponse(res);
+  return res.json();
 }
 
-export async function deleteSeatingPlanByRoom(roomId) {
-  const response = await fetch(`${BASE_URL}/delete-room-plan/${roomId}`, {
-    method: "DELETE",
-  });
-  return handleTextResponse(response);
+export async function downloadSeatingPlanPdf(roomId, roomName) {
+  const res = await fetch(`${BASE_URL}/download-plan-pdf/${roomId}`);
+  await handleResponse(res);
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${roomName || "seating-plan"}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  window.URL.revokeObjectURL(url);
 }

@@ -5,6 +5,7 @@
 // If you're using Vite, you can do:
 
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/student`;
+const SEATING_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/seating`;
 
 async function handleResponse(res) {
   if (!res.ok) {
@@ -71,4 +72,31 @@ export async function resetRoom(roomId) {
     await fetch(`${BASE_URL}/reset-room/${roomId}`, { method: "POST" })
   );
   return res.text();
+}
+
+export async function checkStudentRollNo(rollNo) {
+  const res = await fetch(
+    `${SEATING_BASE_URL}/my-seat/${encodeURIComponent(rollNo)}`
+  );
+
+  if (!res.ok) {
+    const msg = await res.text();
+    return { ok: false, message: msg || "Roll number not found" };
+  }
+
+  const data = await res.json();
+  return { ok: true, data };
+}
+
+export async function getMySeat(rollNo) {
+  const res = await fetch(
+    `${SEATING_BASE_URL}/my-seat/${encodeURIComponent(rollNo)}`
+  );
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(msg || "Failed to load seating plan");
+  }
+
+  return res.json();
 }

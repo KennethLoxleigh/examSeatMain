@@ -43,21 +43,184 @@
 /*Header Of The Table Student*/
 
 .stuList {
-    margin-top: 30px;
-    margin-right: 280px;
+  margin-top: 30px;
+  margin-right: 0;
 }
 
 .stuList tbody {
     color: black;
 }
 
-.stuHeader {
-    display: flex;
-    list-style: none;
-    font-size: 25px;
-    justify-content: space-between;
-    padding-left: 80px;
-    padding-right: 80px;
+.stuTableWrap {
+  margin-top: 20px;
+  padding-left: 80px;
+  padding-right: 80px;
 }
 
+.stuTable {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
 
+.stuTable th,
+.stuTable td {
+  padding: 12px 10px;
+  text-align: center;
+  vertical-align: middle;
+  color: black;
+}
+
+.stuTable th:nth-child(1),
+.stuTable td:nth-child(1) {
+  width: 24%;
+}
+
+.stuTable th:nth-child(2),
+.stuTable td:nth-child(2) {
+  width: 24%;
+}
+
+.stuTable th:nth-child(3),
+.stuTable td:nth-child(3) {
+  width: 24%;
+}
+
+.stuTable th:nth-child(4),
+.stuTable td:nth-child(4) {
+  width: 28%;
+}
+
+.stuTable thead th {
+  font-weight: 700;
+  font-size: 28px;
+  padding-bottom: 18px;
+  border: none;              /* no line for header */
+}
+
+.stuTable {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.stuTable tbody td:nth-child(1),
+.stuTable tbody td:nth-child(2),
+.stuTable tbody td:nth-child(3) {
+  border: 1px solid #999;
+}
+
+/* center Major ID header */
+.stuTable thead th:nth-child(3) {
+  text-align: center;
+}
+
+.stuActionBtns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.stuActionBtns button {
+  min-width: 90px;
+  height: 40px;
+  padding: 8px 14px;
+  font-size: 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.stuActionBtns button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.stuActionBtns button:first-child {
+  background-color: green;
+  color: white;
+}
+
+.stuActionBtns button:last-child {
+  background-color: red;
+  color: white;
+}
+
+.stuActionBtns button:first-child:hover {
+  background-color: #008000;
+}
+
+.stuActionBtns button:last-child:hover {
+  background-color: #cc0000;
+}
+
+.stuEditRow td {
+    border: none !important;
+    padding-top: 10px;
+}
+
+.stuEditCell {
+    border: none !important;
+}
+
+.stuEditBox {
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #999;
+    border-radius: 8px;
+}
+
+.stuEditForm {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stuEditLabel {
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.stuEditActions {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+}
+
+.stuSaveBtn,
+.stuCancelBtn {
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 18px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.stuSaveBtn {
+    background-color: green;
+}
+
+.stuCancelBtn {
+    background-color: red;
+}
+
+.stuSaveBtn:hover {
+    background-color: #00a000;
+    transform: translateY(-1px);
+}
+
+.stuCancelBtn:hover {
+    background-color: #ff3b30;
+    transform: translateY(-1px);
+}
+
+.stuEditError {
+    margin-top: 8px;
+    color: #ff6b6b;
+}

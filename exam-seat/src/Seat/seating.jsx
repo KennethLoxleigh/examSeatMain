@@ -3,7 +3,8 @@ import {
   fetchSeatingRooms,
   fetchSavedSeatingPlan,
   generateSeatingPlan,
-} from "../api/seatingApi.js";
+  downloadSeatingPlanPdf,
+} from "../api/seatingApi";
 
 export default function Seating({ onBack }) {
   const [rooms, setRooms] = useState([]);
@@ -33,29 +34,42 @@ export default function Seating({ onBack }) {
     try {
       setLoadingPlan(true);
       setError("");
+      setSelectedPlan(null);
+
       const data = await fetchSavedSeatingPlan(roomId);
       const normalized = normalizePlanResponse(data);
       setSelectedPlan(normalized);
-      console.log("Saved seating plan response:", data);
     } catch (err) {
-      setError(err.message || "Failed to load seating plan");
+      setSelectedPlan(null);
+      setError(
+        err.message ||
+          "No saved seating plan for this room. Please click Generate Plan first."
+      );
     } finally {
       setLoadingPlan(false);
     }
   }
 
   async function handleGeneratePlan(roomId) {
+  try {
+    setLoadingPlan(true);
+    setError("");
+    const data = await generateSeatingPlan(roomId);
+    const normalized = normalizePlanResponse(data);
+    setSelectedPlan(normalized);
+  } catch (err) {
+    setError(err.message || "Failed to generate seating plan");
+  } finally {
+    setLoadingPlan(false);
+  }
+}
+
+  async function handleDownloadPdf(roomId, roomName) {
     try {
-      setLoadingPlan(true);
       setError("");
-      const data = await generateSeatingPlan(roomId);
-      const normalized = normalizePlanResponse(data);
-      setSelectedPlan(normalized);
-      console.log("Generated seating plan response:", data);
+      await downloadSeatingPlanPdf(roomId, roomName);
     } catch (err) {
-      setError(err.message || "Failed to generate seating plan");
-    } finally {
-      setLoadingPlan(false);
+      setError(err.message || "Failed to download seating plan PDF");
     }
   }
 
@@ -182,6 +196,20 @@ export default function Seating({ onBack }) {
                   >
                     Generate Plan
                   </button>
+
+                  <button
+                    onClick={() => handleDownloadPdf(roomId, roomName)}
+                    style={{
+                      padding: "10px 14px",
+                      border: "1px solid #444",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      background: "#f4f4f4",
+                      color: "#222",
+                    }}
+                  >
+                    Download PDF
+                  </button>
                 </div>
               </div>
             );
@@ -199,16 +227,33 @@ export default function Seating({ onBack }) {
 function PlanModal({ plan, onClose }) {
   const seatMap = useMemo(() => {
     const map = new Map();
-    plan.seats.forEach((seat) => {
+
+    (plan.seats || []).forEach((seat) => {
+      if (
+        seat == null ||
+        !Number.isFinite(seat.rowNum) ||
+        !Number.isFinite(seat.columnNum)
+      ) {
+        return;
+      }
+
       map.set(`${seat.rowNum}-${seat.columnNum}`, seat);
     });
+
     return map;
   }, [plan.seats]);
 
+  const rowStart = Number.isFinite(plan.minRow) ? plan.minRow : 1;
+  const rowEnd = Number.isFinite(plan.maxRow) ? plan.maxRow : rowStart;
+  const colStart = Number.isFinite(plan.minCol) ? plan.minCol : 1;
+  const colEnd = Number.isFinite(plan.maxCol) ? plan.maxCol : colStart;
+
   const cells = [];
-  for (let row = 1; row <= plan.maxRow; row += 1) {
-    for (let col = 1; col <= plan.maxCol; col += 1) {
+
+  for (let row = rowStart; row <= rowEnd; row += 1) {
+    for (let col = colStart; col <= colEnd; col += 1) {
       const seat = seatMap.get(`${row}-${col}`);
+
       cells.push(
         <div
           key={`${row}-${col}`}
@@ -229,12 +274,14 @@ function PlanModal({ plan, onClose }) {
             {row}, {col}
           </strong>
           <span style={{ marginTop: "6px" }}>
-            {seat ? seat.rollNo : "Empty"}
+            {seat ? seat.rollNo || "Occupied" : "Empty"}
           </span>
         </div>
       );
     }
   }
+
+  const hasGrid = cells.length > 0;
 
   return (
     <div
@@ -301,13 +348,29 @@ function PlanModal({ plan, onClose }) {
           Front / Whiteboard
         </div>
 
-        {plan.seats.length === 0 ? (
-          <p>No seat data returned by backend.</p>
+        {!hasGrid ? (
+          <div>
+            <p>No seat positions found in saved plan response.</p>
+            <pre
+              style={{
+                whiteSpace: "pre-wrap",
+                background: "#f5f5f5",
+                padding: "12px",
+                borderRadius: "8px",
+                overflowX: "auto",
+              }}
+            >
+              {JSON.stringify(plan.raw, null, 2)}
+            </pre>
+          </div>
         ) : (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${plan.maxCol}, minmax(90px, 1fr))`,
+              gridTemplateColumns: `repeat(${Math.max(
+                colEnd - colStart + 1,
+                1
+              )}, minmax(90px, 1fr))`,
               gap: "12px",
             }}
           >
@@ -320,42 +383,184 @@ function PlanModal({ plan, onClose }) {
 }
 
 function normalizePlanResponse(data) {
+  const response = Array.isArray(data) ? { seats: data } : data || {};
+
   const roomName =
-    data?.roomName ??
-    data?.room?.roomName ??
-    data?.room?.name ??
+    response.roomName ??
+    response.room?.roomName ??
+    response.room?.name ??
+    response.room?.room_number ??
+    response.room?.roomNo ??
+    response.room?.roomId ??
     "Seating Plan";
 
-  const rawSeats =
-    data?.seats ??
-    data?.seatingPlans ??
-    data?.seatingList ??
-    data?.seatList ??
-    data?.plan ??
+  const rawSeatsSource =
+    response.seats ??
+    response.seatingPlans ??
+    response.seatingList ??
+    response.seatinglist ??
+    response.seatList ??
+    response.plan ??
+    response.savedPlan ??
+    response.savedPlans ??
+    response.layout ??
+    response.positions ??
+    response.data?.seats ??
+    response.data?.seatingPlans ??
+    response.data?.seatList ??
+    response.data?.plan ??
+    response.result?.seats ??
+    response.result?.seatList ??
     [];
 
-  const seats = Array.isArray(rawSeats)
-    ? rawSeats.map((item, index) => ({
-        id: item.seatingId ?? item.id ?? index,
-        rollNo: item.rollNo ?? item.studentRollNo ?? item.student?.rollNo ?? "",
-        rowNum: Number(item.rowNum ?? item.row ?? item.rowNumber ?? 0),
-        columnNum: Number(
-          item.columnNum ?? item.column ?? item.col ?? item.columnNumber ?? 0
+  function pickNumber(...values) {
+    for (const value of values) {
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        return num;
+      }
+    }
+    return null;
+  }
+
+  function getRollNo(item) {
+    if (item == null) return "";
+
+    if (typeof item === "string" || typeof item === "number") {
+      return String(item);
+    }
+
+    return (
+      item.rollNo ??
+      item.studentRollNo ??
+      item.roll_no ??
+      item.rollnumber ??
+      item.student?.rollNo ??
+      item.student?.studentRollNo ??
+      item.student?.roll_no ??
+      item.assignedStudent?.rollNo ??
+      item.assignedStudent?.studentRollNo ??
+      item.seat?.rollNo ??
+      item.seat?.studentRollNo ??
+      item.value ??
+      ""
+    );
+  }
+
+  let seats = [];
+  let matrixMaxRow = 0;
+  let matrixMaxCol = 0;
+
+  if (Array.isArray(rawSeatsSource) && rawSeatsSource.every(Array.isArray)) {
+    matrixMaxRow = rawSeatsSource.length;
+    matrixMaxCol = Math.max(
+      0,
+      ...rawSeatsSource.map((row) => (Array.isArray(row) ? row.length : 0))
+    );
+
+    seats = rawSeatsSource.flatMap((rowItems, rowIndex) =>
+      (Array.isArray(rowItems) ? rowItems : [])
+        .map((item, colIndex) => {
+          if (item == null) return null;
+
+          return {
+            id:
+              item?.seatingId ??
+              item?.id ??
+              `${rowIndex + 1}-${colIndex + 1}`,
+            rollNo: getRollNo(item),
+            rowNum: rowIndex + 1,
+            columnNum: colIndex + 1,
+          };
+        })
+        .filter(Boolean)
+    );
+  } else {
+    const rawSeats = Array.isArray(rawSeatsSource) ? rawSeatsSource : [];
+
+    seats = rawSeats
+      .map((item, index) => ({
+        id: item?.seatingId ?? item?.id ?? index,
+        rollNo: getRollNo(item),
+        rowNum: pickNumber(
+          item?.rowNum,
+          item?.row,
+          item?.rowNumber,
+          item?.rowIndex,
+          item?.seatRow,
+          item?.seat?.rowNum,
+          item?.seat?.row,
+          item?.position?.rowNum,
+          item?.position?.row,
+          item?.seatPosition?.row,
+          item?.r
+        ),
+        columnNum: pickNumber(
+          item?.columnNum,
+          item?.column,
+          item?.col,
+          item?.columnNumber,
+          item?.colNum,
+          item?.columnIndex,
+          item?.seatColumn,
+          item?.seat?.columnNum,
+          item?.seat?.column,
+          item?.position?.columnNum,
+          item?.position?.column,
+          item?.position?.col,
+          item?.seatPosition?.column,
+          item?.c
         ),
       }))
-    : [];
+      .filter(
+        (seat) =>
+          Number.isFinite(seat.rowNum) && Number.isFinite(seat.columnNum)
+      );
+  }
 
-  const maxRow =
-    seats.length > 0 ? Math.max(...seats.map((seat) => seat.rowNum)) : 0;
+  const rowValues = seats.map((seat) => seat.rowNum);
+  const colValues = seats.map((seat) => seat.columnNum);
 
-  const maxCol =
-    seats.length > 0 ? Math.max(...seats.map((seat) => seat.columnNum)) : 0;
+  const minRowFromSeats =
+    rowValues.length > 0 ? Math.min(...rowValues) : null;
+  const maxRowFromSeats =
+    rowValues.length > 0 ? Math.max(...rowValues) : null;
+
+  const minColFromSeats =
+    colValues.length > 0 ? Math.min(...colValues) : null;
+  const maxColFromSeats =
+    colValues.length > 0 ? Math.max(...colValues) : null;
+
+  const minRow = pickNumber(response.minRow, minRowFromSeats, 1);
+  const maxRow = pickNumber(
+    response.maxRow,
+    response.rowCount,
+    response.rows,
+    response.totalRows,
+    maxRowFromSeats,
+    matrixMaxRow,
+    minRow
+  );
+
+  const minCol = pickNumber(response.minCol, minColFromSeats, 1);
+  const maxCol = pickNumber(
+    response.maxCol,
+    response.columnCount,
+    response.cols,
+    response.columns,
+    response.totalColumns,
+    maxColFromSeats,
+    matrixMaxCol,
+    minCol
+  );
 
   return {
     roomName,
     seats,
+    minRow,
     maxRow,
+    minCol,
     maxCol,
-    raw: data,
+    raw: response,
   };
 }

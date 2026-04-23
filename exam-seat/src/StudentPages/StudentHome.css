@@ -1,0 +1,69 @@
+.student-home-page {
+  min-height: 100vh;
+  padding: 32px;
+  box-sizing: border-box;
+  background: #d9dde3;
+}
+
+.student-home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+.student-home-title {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 800;
+  color: #000;
+}
+
+.student-home-top-btn {
+  background: #ffffff;
+  color: #000;
+  border: 1px solid #d6d6d6;
+  border-radius: 18px;
+  padding: 12px 26px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.student-home-top-btn:hover {
+  background: #f3f4f6;
+}
+
+.student-home-card {
+  width: 360px;
+  background: #f7f7fa;
+  border: 2px solid #2643e9;
+  border-radius: 24px;
+  padding: 26px 24px;
+  box-sizing: border-box;
+}
+
+.student-home-card p {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #111;
+  line-height: 1.4;
+}
+
+.student-home-card p:last-child {
+  margin-bottom: 0;
+}
+
+.student-home-label {
+  font-weight: 700;
+}
+
+.student-home-status {
+  font-size: 18px;
+  color: #111;
+}
+
+.student-home-error {
+  font-size: 18px;
+  color: #c62828;
+}

@@ -10,7 +10,14 @@ import {
   deleteInvigilator,
 } from "../api/inviApi.js";
 
-export default function Invigilator() {
+const RANK_OPTIONS = ["CHIEF", "SENIOR", "ASSISTANT"];
+
+function formatRank(rank) {
+  if (!rank) return "";
+  return rank.charAt(0) + rank.slice(1).toLowerCase();
+}
+
+export default function Invigilator({ onInvigilatorCountChange }) {
   const [invigilators, setInvigilators] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
@@ -19,16 +26,26 @@ export default function Invigilator() {
 
   // dropdown update state
   const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editDept, setEditDept] = useState("");
-  const [editError, setEditError] = useState("");
+const [editName, setEditName] = useState("");
+const [editRank, setEditRank] = useState("CHIEF");
+const [editDept, setEditDept] = useState("");
+const [editError, setEditError] = useState("");
+
+  
 
   async function loadInvigilators() {
     setLoading(true);
     setStatus("");
     try {
       const data = await fetchInvigilators();
-      setInvigilators(data);
+
+const invigilatorList = Array.isArray(data)
+  ? data
+  : Array.isArray(data?.invigilators)
+  ? data.invigilators
+  : [];
+
+setInvigilators(invigilatorList);
     } catch (err) {
       setStatus(`Error: ${err.message}`);
     } finally {
@@ -40,49 +57,60 @@ export default function Invigilator() {
     loadInvigilators();
   }, []);
 
-  async function handleAddFromModal(payload) {
-    const msg = await addInvigilator({
-      invigilatorName: payload.invigilatorName,
-      department: payload.department,
-    });
-    setStatus(msg);
-    await loadInvigilators();
+  useEffect(() => {
+  if (onInvigilatorCountChange) {
+    onInvigilatorCountChange(invigilators.length);
   }
+}, [invigilators, onInvigilatorCountChange]);
+
+  async function handleAddFromModal(payload) {
+  const msg = await addInvigilator({
+    invigilatorName: payload.invigilatorName,
+    rank: payload.rank,
+    department: payload.department,
+  });
+  setStatus(msg);
+  await loadInvigilators();
+}
 
   function startEdit(inv) {
-    setEditError("");
-    setStatus("");
-    setEditingId(inv.invigilatorId);
-    setEditName(inv.invigilatorName ?? "");
-    setEditDept(inv.department ?? "");
-  }
+  setEditError("");
+  setStatus("");
+  setEditingId(inv.invigilatorId);
+  setEditName(inv.invigilatorName ?? "");
+  setEditRank(inv.rank ?? "CHIEF");
+  setEditDept(inv.department ?? "");
+}
 
   function cancelEdit() {
-    setEditingId(null);
-    setEditName("");
-    setEditDept("");
-    setEditError("");
-  }
+  setEditingId(null);
+  setEditName("");
+  setEditRank("CHIEF");
+  setEditDept("");
+  setEditError("");
+}
 
   async function saveEdit(invigilatorId) {
-    setEditError("");
-    setStatus("");
+  setEditError("");
+  setStatus("");
 
-    if (!editName.trim()) return setEditError("Name is required.");
-    if (!editDept.trim()) return setEditError("Department is required.");
+  if (!editName.trim()) return setEditError("Name is required.");
+  if (!editRank.trim()) return setEditError("Rank is required.");
+  if (!editDept.trim()) return setEditError("Department is required.");
 
-    try {
-      const msg = await updateInvigilator(invigilatorId, {
-        invigilatorName: editName.trim(),
-        department: editDept.trim(),
-      });
-      setStatus(msg);
-      cancelEdit();
-      await loadInvigilators();
-    } catch (err) {
-      setEditError(err.message);
-    }
+  try {
+    const msg = await updateInvigilator(invigilatorId, {
+      invigilatorName: editName.trim(),
+      rank: editRank,
+      department: editDept.trim(),
+    });
+    setStatus(msg);
+    cancelEdit();
+    await loadInvigilators();
+  } catch (err) {
+    setEditError(err.message);
   }
+}
 
   async function removeInvigilator(invigilatorId) {
     setStatus("");
@@ -115,20 +143,15 @@ export default function Invigilator() {
       {/* Table Header row (your existing UI) */}
       <div className="inviList">
 
-        <div style={{ paddingLeft: 80, paddingRight: 80, marginTop: 10 }}>
-            <table
-                border="1"
-                cellPadding="10"
-
-                style={{ width: "100%", color: "white", borderCollapse: "collapse" }}
-            >
+        <div style={{ paddingLeft: 80, paddingRight: 40, marginTop: 10 }}>
+            <table className="inviTable">
                 <thead>
-                <tr>
+                  <tr>
                     <th>Name</th>
-                    <th>Rank (ID)</th>
+                    <th>Rank</th>
                     <th>Department</th>
-                    <th style={{ width: 240 }}></th> {/* no Action header */}
-                </tr>
+                    <th className="inviActionHead"></th>
+                  </tr>
                 </thead>
 
                 <tbody>
@@ -143,21 +166,32 @@ export default function Invigilator() {
                     <Fragment key={inv.invigilatorId}>
                         <tr>
                         <td>{inv.invigilatorName}</td>
-                        <td>{inv.invigilatorId}</td>
+                        <td>{formatRank(inv.rank)}</td>
                         <td>{inv.department}</td>
-                        <td>
-                            <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => startEdit(inv)}>Update</button>
-                            <button onClick={() => removeInvigilator(inv.invigilatorId)}>
-                                Remove
+                        <td className="inviActionCell">
+                          <div className="inviActionButtons">
+                            <button
+                              type="button"
+                              className="inviUpdateBtn"
+                              onClick={() => startEdit(inv)}
+                            >
+                              Update
                             </button>
-                            </div>
+
+                            <button
+                              type="button"
+                              className="inviRemoveBtn"
+                              onClick={() => removeInvigilator(inv.invigilatorId)}
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </td>
                         </tr>
 
                         {editingId === inv.invigilatorId && (
-                            <tr>
-                                <td colSpan={4}>
+                          <tr className="inviEditRow">
+                            <td colSpan={4} className="inviEditCell">
                                 <div
                                     style={{
                                     marginTop: 8,
@@ -181,6 +215,20 @@ export default function Invigilator() {
                                     </div>
 
                                     <div>
+                                      <div style={{ fontSize: 12, marginBottom: 4 }}>Rank</div>
+                                      <select
+                                        value={editRank}
+                                        onChange={(e) => setEditRank(e.target.value)}
+                                      >
+                                        {RANK_OPTIONS.map((rank) => (
+                                          <option key={rank} value={rank}>
+                                            {formatRank(rank)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    <div>
                                         <div style={{ fontSize: 12, marginBottom: 4 }}>Department</div>
                                         <input
                                         value={editDept}
@@ -188,13 +236,22 @@ export default function Invigilator() {
                                         />
                                     </div>
 
-                                    <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
-                                        <button type="button" onClick={() => saveEdit(inv.invigilatorId)}>
+                                    <div className="inviEditActions">
+                                      <button
+                                        type="button"
+                                        className="inviSaveBtn"
+                                        onClick={() => saveEdit(inv.invigilatorId)}
+                                      >
                                         Save
-                                        </button>
-                                        <button type="button" onClick={cancelEdit}>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        className="inviCancelBtn"
+                                        onClick={cancelEdit}
+                                      >
                                         Cancel
-                                        </button>
+                                      </button>
                                     </div>
                                     </div>
 

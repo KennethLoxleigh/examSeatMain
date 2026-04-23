@@ -41,11 +41,105 @@
 
 /*Header Of The Table Invigilator*/
 
-.examListHead {
+.examList {
     margin-top: 30px;
-    margin-right: 280px;
-    height: 40px;
-    background-color: blue;
+    margin-right: 60px;
+    color: black;
+}
+
+.examTable {
+    width: 100%;
+    border-collapse: collapse;
+    color: black;
+}
+
+.examTable thead th {
+    border: none;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 25px;
+    font-weight: 700;
+    color: black;
+    padding: 18px 12px 24px;
+}
+
+.examTable tbody td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 16px 12px;
+    color: black;
+    font-size: 18px;
+}
+
+.examTable tbody td:not(.examActionCell) {
+    border: 1px solid #9a9a9a;
+}
+
+.examActionHead {
+    width: 260px;
+    border: none !important;
+}
+
+.examActionCell {
+    width: 260px;
+    border: none !important;
+}
+
+.examActionButtons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+}
+
+.examUpdateBtn,
+.examRemoveBtn,
+.examSaveBtn,
+.examCancelBtn {
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 18px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.examUpdateBtn,
+.examSaveBtn {
+    background-color: green;
+}
+
+.examRemoveBtn,
+.examCancelBtn {
+    background-color: red;
+}
+
+.examUpdateBtn:hover,
+.examSaveBtn:hover {
+    background-color: #00a000;
+    transform: translateY(-1px);
+}
+
+.examRemoveBtn:hover,
+.examCancelBtn:hover {
+    background-color: #ff3b30;
+    transform: translateY(-1px);
+}
+
+.examEditRow td {
+    border: none !important;
+    padding-top: 10px;
+}
+
+.examEditCell {
+    border: none !important;
+}
+
+.examEditActions {
+    display: flex;
+    gap: 10px;
+    align-items: end;
 }
 
 .examHeader {
@@ -55,8 +149,4 @@
     justify-content: space-between;
     padding-left: 180px;
     padding-right: 180px;
-}
-
-.examHeader li {
-    display: inline-block;
 }

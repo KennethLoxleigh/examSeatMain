@@ -3,6 +3,7 @@
 // If you are using .env like:
 // VITE_API_BASE_URL=http://192.168.x.x:8080
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/invigilator`;
+const ASSIGNMENT_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/invigilatorAssignment`;
 
 // If you ever switch to Vite proxy (recommended), you can use this instead:
 // const BASE_URL = `/api/v1/invigilator`;
@@ -25,8 +26,8 @@ export async function fetchInvigilators() {
 
 /** POST: returns String (plain text) */
 export async function addInvigilator(invigilator) {
-  // Expected shape (based on your controller/service):
-  // { invigilatorName: "Name", department: "Dept" }
+  // Expected shape:
+// { invigilatorName: "Name", rank: "CHIEF", department: "Dept" }
   const res = await handleResponse(
     await fetch(`${BASE_URL}/add-invigilator`, {
       method: "POST",
@@ -59,4 +60,47 @@ export async function updateInvigilator(invigilatorId, invigilator) {
     })
   );
   return res.text();
+}
+
+export async function checkInvigilatorName(invigilatorName) {
+  const cleanName = invigilatorName.trim().toLowerCase();
+
+  // 1) First check if the invigilator exists
+  const invRes = await handleResponse(
+    await fetch(`${BASE_URL}/list-invigilator`, { method: "GET" })
+  );
+
+  const invigilators = await invRes.json();
+
+  const found = invigilators.find(
+    (item) =>
+      item.invigilatorName?.trim().toLowerCase() === cleanName
+  );
+
+  if (!found) {
+    return { ok: false, message: "Invigilator not found" };
+  }
+
+  // 2) Then check duties
+  const dutyRes = await fetch(
+    `${ASSIGNMENT_URL}/my-duties/${encodeURIComponent(invigilatorName)}`
+  );
+
+  // if backend says bad request / no assignments,
+  // treat it as valid login with empty duties
+  if (!dutyRes.ok) {
+    const msg = await dutyRes.text().catch(() => "");
+
+    if (
+      msg.toLowerCase().includes("no assignments found") ||
+      msg.toLowerCase().includes("no duties found")
+    ) {
+      return { ok: true, data: [] };
+    }
+
+    return { ok: false, message: msg || "Failed to fetch invigilator duties" };
+  }
+
+  const duties = await dutyRes.json();
+  return { ok: true, data: Array.isArray(duties) ? duties : [] };
 }

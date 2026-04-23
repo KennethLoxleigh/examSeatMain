@@ -51,14 +51,13 @@ export default function AddInvigilatorModal({ onClose, onSave }) {
           </label>
 
           {/* Rank (after name, before department) */}
-          <label>
-            Rank
-            <input
-              value={rank}
-              onChange={(e) => setRank(e.target.value)}
-              placeholder="Enter rank"
-            />
-          </label>
+          <label>Rank</label>
+          <select value={rank} onChange={(e) => setRank(e.target.value)}>
+            <option value="">Select rank</option>
+            <option value="CHIEF">Chief</option>
+            <option value="SENIOR">Senior</option>
+            <option value="ASSISTANT">Assistant</option>
+          </select>
 
           {/* Department */}
           <label>

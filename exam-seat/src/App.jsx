@@ -7,7 +7,8 @@ import AdminLayout from "./AdminPages/Admin.jsx";
 import StudentHome from "./StudentPages/StudentHome.jsx";
 import InvigilatorHome from "./InvigilatorPages/InvigilatorHome.jsx";
 
-import Seating from "./Seat/seating.jsx";
+import { checkStudentRollNo } from "./api/studentApi";
+import { checkInvigilatorName } from "./api/inviApi";
 
 // ✅ Demo accounts (change these later)
 const USERS = {
@@ -20,19 +21,50 @@ export default function App() {
   // role: null => not logged in yet
   const [auth, setAuth] = useState({ role: null, username: "" });
 
-  const handleLogin = ({ role, username, password }) => {
-    const user = USERS[role];
-
-    // basic check
-    if (!user) return { ok: false, message: "Unknown role." };
-
-    if (username === user.username && password === user.password) {
-      setAuth({ role, username });
-      return { ok: true, message: "Login success" };
+  const handleLogin = async ({ role, username, password }) => {
+  if (role === "admin") {
+    if (username === "admin" && password === "admin123") {
+      setAuth({ role: "admin", username });
+      return { ok: true };
     }
 
-    return { ok: false, message: "Wrong username or password." };
-  };
+    return { ok: false, message: "Invalid admin username or password" };
+  }
+
+  if (role === "student") {
+    const result = await checkStudentRollNo(username);
+
+    if (!result.ok) {
+      return { ok: false, message: result.message };
+    }
+
+    setAuth({
+      role: "student",
+      username,
+      studentSeat: result.data,
+    });
+
+    return { ok: true };
+  }
+
+  if (role === "invigilator") {
+    const result = await checkInvigilatorName(username);
+
+    if (!result.ok) {
+      return { ok: false, message: result.message };
+    }
+
+    setAuth({
+      role: "invigilator",
+      username,
+      duties: result.data,
+    });
+
+    return { ok: true };
+  }
+
+  return { ok: false, message: "Invalid role" };
+};
 
   const handleLogout = () => {
     setAuth({ role: null, username: "" });
@@ -53,8 +85,14 @@ export default function App() {
   }
 
   if (auth.role === "invigilator") {
-    return <InvigilatorHome username={auth.username} onLogout={handleLogout} />;
-  }
+  return (
+    <InvigilatorHome
+      username={auth.username}
+      duties={auth.duties}
+      onBack={handleLogout}
+    />
+  );
+}
 
   // fallback
   return <LoginPage onLogin={handleLogin} />;

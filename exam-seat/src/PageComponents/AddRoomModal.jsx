@@ -71,7 +71,7 @@ export default function AddRoomModal({ onClose, onSave }) {
             </label>
 
             <label>
-            Max Major
+            Maxium Major
             <input
                 value={maxMajor}
                 onChange={(e) => setMaxMajor(e.target.value)}

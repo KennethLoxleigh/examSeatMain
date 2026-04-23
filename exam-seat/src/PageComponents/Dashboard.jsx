@@ -1,51 +1,52 @@
 import "./Dashboard.css";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleRight } from "@fortawesome/free-solid-svg-icons";
 
-export default function Dashboard({ username, onNavigate }) {
+export default function Dashboard({
+  username,
+  onNavigate,
+  studentCount,
+  invigilatorCount,
+  examCount,
+  roomCount,
+}) {
 
   return (
     <>
     <div className="dashboardWrapper">
         <div className="goToBox">
-            Students List <br />
             <a href="#" onClick={(e) => {
                 e.preventDefault();
                 onNavigate("student");
             }}>
-                See More
-                <FontAwesomeIcon icon={faAngleRight} />
+                STUDENTS
             </a>
+            <br /> Total Students: {studentCount}
         </div>
         <div className="goToBox">
-            Invigilators List <br />
             <a href="#" onClick={(e) => {
                 e.preventDefault();
                 onNavigate("invigilator");
             }}>
-                See More
-                <FontAwesomeIcon icon={faAngleRight} />
+                INVIGILATORS
             </a>
+            <br /> Total Invigilators: {invigilatorCount}
         </div>
         <div className="goToBox">
-            Exam List <br />
             <a href="#" onClick={(e) => {
                 e.preventDefault();
                 onNavigate("exam");
             }}>
-                See More
-                <FontAwesomeIcon icon={faAngleRight} />
+                EXAMS
             </a>
+            <br /> Total Exams: {examCount}
         </div>
         <div className="goToBox">
-            Room List <br />
             <a href="#" onClick={(e) => {
                 e.preventDefault();
                 onNavigate("room");
             }}>
-                See More
-                <FontAwesomeIcon icon={faAngleRight} />
+                ROOMS
             </a>
+            <br /> Total Rooms: {roomCount}
         </div>
     </div>
 
@@ -58,12 +59,20 @@ export default function Dashboard({ username, onNavigate }) {
                 onNavigate("seating");
             }}
             >
-                Seating Plan
+                SEATING PLANS
             </a>
         </div>
 
         <div className="assignedInvi">
-            <a href="#">Assigned Inivigilator</a>
+            <a
+                href="#"
+                onClick={(e) => {
+                e.preventDefault();
+                onNavigate("assignedInv");
+                }}
+            >
+                ASSIGNED INVIGILATORS
+            </a>
         </div>
     </div>
     </>
